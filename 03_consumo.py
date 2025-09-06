@@ -126,12 +126,13 @@ def grafico3():
                 title = "Consumo Total por Região!")
         return figuraGrafico3.to_html()        
 
-@app.route('/comparar',methods=['POST','GET'])
+@app.route('/comparar',methods =['POST','GET'])
 def comparar():
     opcoes = [
-        'beer serving',
+        'beer_servings',
         'spirit_servings',
-        'wine_servings']
+        'wine_servings'
+        ]
     
     if request.method == "POST":
         eixoX = request.form.get('eixo_x')
@@ -139,7 +140,7 @@ def comparar():
         if eixoX == eixoY:
             return"<marquee> Você fez besteira...escolha tabelas diferente...</marquee>" 
         conn = sqlite3.connect(f'{caminho}banco01.bd')
-        df = pd.read_sql_query("SELECT country,{},{} FROM bebidas".format(eixoX),(eixoY),conn)
+        df = pd.read_sql_query("SELECT country,{},{} FROM bebidas".format(eixoX, eixoY),conn)
         conn.close()
         figuraComparar = px.scatter(
             df,
@@ -151,8 +152,8 @@ def comparar():
             textposition = "top center"
         )
         return figuraComparar.to_html()
-        
     return render_template_string('''
+                                  
         <! -- Isso é um comentario em html -->     
         <style>
 /* Google Font futurista */
@@ -264,6 +265,7 @@ br {
         <input type="submit" value=" -- Comparar --">
         </form>
                                   ''',opcoes=opcoes)
+
 
 
 ## O mundo fica aqui !!!
