@@ -17,8 +17,8 @@ codhtml = '''
         <ul>
             <li><a href="/grafico1"> Top 10 paises em consumo de alcool </a></li>
             <li><a href="/grafico2"> Media de consumo por tipo </a></li>
-            <li><a href="/grafico3> Consumo total por Região </a></li>
-            <li><a href="/grafico4> Comparativo entre tipos de bebidas </a></li>
+            <li><a href="/grafico3"> Consumo total por Região </a></li>
+            <li><a href="/grafico4"> Comparativo entre tipos de bebidas </a></li>
             <li><a href="/pais"> Insights por pais </a></li>
         </ul>
     <h2> Parte 02   </h2>
@@ -96,7 +96,35 @@ def grafico2():
     title="Media de consumo global por tipo")
     return figuraGrafico02.to_html()
 
-
+@app.route("/grafico3")
+def grafico3():
+    regioes = {
+            "Europa":['France','Germany','Spain','Italy','Portugal'],
+            "Asia":['China','Japan','India','Thailand'],
+            "Africa":['Angola','Nigeria','Egypt','Algeria'],
+            "Americas":['USA','Canada','Brazil','Argentina','Mexico']
+             }
+    dados = []
+    with sqlite3.connect(f'{caminho}banco01.bd') as conn:
+        #itera sobre o dicionario, de regioes onde cada chave (regiao tem uma lista de paises)
+        for regiao, paises in regioes.items():
+            placeholders = ",".join([f"'{pais}'" for pais in paises])
+            query = f"""
+                SELECT SUM(total_litres_of_pure_alcohol) As total 
+                FROM bebidas
+                WHERE country in ({placeholders})                        
+                """
+            total = pd.read_sql_query(query,conn).iloc[0,0]
+            dados.append({
+                "Região": regiao,
+                "Consumo Total":total})
+        dfRegioes = pd.DataFrame(dados)
+        figuraGrafico3 = px.pie(
+                dfRegioes,
+                names = "Região",
+                values = "Consumo Total",
+                title = "Consumo Total por Região!")
+        return figuraGrafico3.to_html()        
 
 ## O mundo fica aqui !!!
 
