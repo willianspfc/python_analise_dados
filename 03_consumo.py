@@ -44,7 +44,7 @@ def carregarCsv():
         print(f"Erro ao carregar os arquivos csv: {erro}")
         return None , None
 
-def criarBandoDados():
+def criarBancoDados():
     conn = sqlite3.connect(f"{caminho}banco01.bd")     
     #carregar dados usando nossa função criada anteriormente
     dfDrinks,dfAvengers = carregarCsv() 
@@ -154,7 +154,7 @@ def comparar():
         return figuraComparar.to_html()
     return render_template_string('''
                                   
-        <! -- Isso é um comentario em html -->     
+          
         <style>
 /* Google Font futurista */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -245,7 +245,7 @@ br {
         <form method="POST">
                                   
             <label for="eixo_x"> Eixo X : </label>
-            <select name=""eixo_x>
+            <select name="eixo_x">
                 {% for opcao in opcoes%}
                    <option value="{{opcao}}"> {{opcao}} </option>
                 {% endfor %}
@@ -266,10 +266,62 @@ br {
         </form>
                                   ''',opcoes=opcoes)
 
+@app.route('/ver',methods=["POST","GET"])
+def ver_tabela():
+    if request.method == "POST":
+        nome_tabela = request.form.get('tabela')
+        if nome_tabela not in ['bebidas','vingadores']:
+            return " Tabela errada rapaz ... pemnsa que vai aonde"
+        conn = sqlite3.connect(f'{caminho}banco01.bd')
+        df=pd.read_sql_query(f"SELECT * FROM {nome_tabela}",conn)
+        conn.close()
+        tabela_html = df.to_html(classes='table table-striped')
+        return f'''
+            <H3> Conteudo da tabela!{nome_tabela}: </H3>
+            {tabela_html} ''' 
+
+
+    return render_template_string('''
+        <h3> Visualizar tabelas! </h3>
+        <form methods="POST">
+            <label> Selecione uma tabela: </label>
+            <select name="tabela">
+                <option value="bebidas"> Bebidas </option>
+                <option value="vingadores"> Vingadores </option>
+            </select>
+            <input type="submit" value="Consultar">                               
+        </form>                          
+                                  ''')
+
+@app.route('/upload',methods=['GET','POST'])
+def upload():
+    if request.method == "POST":
+        recebido = request.files['c_arquivo']
+        if not recebido:
+            return "Nenhum arquivo foi recebido"
+        dfAvengers = pd.read_csv(recebido, enconding='latin1')
+        conn = sqlite3.connect(f'{caminho}banco01.bd')
+        dfAvengers.to_sql("vingadores",conn,if_exists="replace", index=False)
+        conn.commit()
+        conn.close()
+        return "Sucesso! Tabela vingadores armazenada no banco de dados"
+
+
+    return '''
+        <h2>Upload da tabela avengers </h2>
+        <form method="POST" enctype='multipart/form-data'>
+            <input type='file' name='c_arquivo' accept='.csv'>
+            <input type='submit' value='Carregar'>
+        </form>
+
+                '''
+
+
+
 
 
 ## O mundo fica aqui !!!
 
 if __name__ == '__main__':
-    criarBandoDados()
+    criarBancoDados()
     app.run(debug=True)
