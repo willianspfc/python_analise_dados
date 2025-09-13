@@ -271,7 +271,7 @@ def ver_tabela():
     if request.method == "POST":
         nome_tabela = request.form.get('tabela')
         if nome_tabela not in ['bebidas','vingadores']:
-            return " Tabela errada rapaz ... pemnsa que vai aonde"
+            return " Tabela errada rapaz ... pensa que vai aonde"
         conn = sqlite3.connect(f'{caminho}banco01.bd')
         df=pd.read_sql_query(f"SELECT * FROM {nome_tabela}",conn)
         conn.close()
@@ -283,7 +283,7 @@ def ver_tabela():
 
     return render_template_string('''
         <h3> Visualizar tabelas! </h3>
-        <form methods="POST">
+        <form method="POST">
             <label> Selecione uma tabela: </label>
             <select name="tabela">
                 <option value="bebidas"> Bebidas </option>
@@ -316,7 +316,25 @@ def upload():
 
                 '''
 
-
+@app.route('/apagar/<nome_tabela>',methods=['GET'])
+def apagarTabela(nome_tabela):
+    conn = sqlite3.connect(f'{caminho}banco01.bd')
+    # realiza o apontamento para o banco que será manipulado
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='{nome_tabela}'")
+    existe = cursor.fetchone()[0]
+    if not existe:
+        conn.close()
+        return "Tabela não foi encontrada!"
+    try:
+        cursor.execute( f"DROP TABLE '{nome_tabela}' ")
+        conn.commit()
+        conn.close()
+        return f"Tabela{nome_tabela} apagada com sucesso!"
+    
+    except Exception as erro:
+        conn.close()
+        return f"Não foi possivel apagar a tabela,erro: {erro}"
 
 
 
